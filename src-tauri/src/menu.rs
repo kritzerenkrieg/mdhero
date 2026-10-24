@@ -111,18 +111,14 @@ pub fn create_menu_with_labels<R: Runtime>(
         ],
     )?;
 
-    // Undo / Redo (#182). muda's built-in items send the platform's own undo
-    // to the webview, which the editor answers from its own history. They are
-    // "Linux: Unsupported" in muda, so Linux gets plain items that ask the
-    // frontend instead. No accelerator there: the menu would take Ctrl+Z away
-    // from the webview, where every text field already handles it.
-    #[cfg(not(target_os = "linux"))]
-    let undo = PredefinedMenuItem::undo(app, predefined_label(labels, "menu.undo"))?;
-    #[cfg(not(target_os = "linux"))]
-    let redo = PredefinedMenuItem::redo(app, predefined_label(labels, "menu.redo"))?;
-    #[cfg(target_os = "linux")]
+    // Undo / Redo (#182). Plain items on every platform that ask the frontend,
+    // which answers from the editor's own history. muda's built-in items don't
+    // work here: Linux has none, macOS's `undo:` never reaches the editor as a
+    // `historyUndo` beforeinput in WKWebView (the menu click did nothing), and
+    // Windows' only replays a Ctrl+Z keystroke. No accelerator: the menu would
+    // take Cmd/Ctrl+Z away from the webview, where every text field already
+    // handles it.
     let undo = MenuItem::with_id(app, "undo", tr(labels, "menu.undo", "Undo"), true, None::<&str>)?;
-    #[cfg(target_os = "linux")]
     let redo = MenuItem::with_id(app, "redo", tr(labels, "menu.redo", "Redo"), true, None::<&str>)?;
 
     let edit_menu = Submenu::with_items(
